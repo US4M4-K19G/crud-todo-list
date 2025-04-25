@@ -1,82 +1,54 @@
-'use client'
-import React, { useState, useEffect } from "react";
-import axios from 'axios';
+"use client";
+
+import React, { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import toast from 'react-hot-toast';
 
-export default function EditTodoPage() {
-  const [todo, setTodo] = useState({});
+export default function EditPage() {
   const { id } = useParams();
   const router = useRouter();
+  const [title, setTitle] = useState('');
+  const [desc, setDesc] = useState('');
 
   useEffect(() => {
-    const fetchTodo = async () => {
-      try {
-        const response = await axios.get(`/api/todo/${id}`);
-        if (response.status === 200) {
-          setTodo(response.data.todo);
-        }
-      } catch (error) {
-        toast.error("Error fetching Todo");
-      }
-    };
-
-    fetchTodo();
+    const todos = JSON.parse(localStorage.getItem("todos") || "[]");
+    const todo = todos.find(todo => todo._id === id);
+    if (todo) {
+      setTitle(todo.title);
+      setDesc(todo.desc);
+    }
   }, [id]);
 
-  const handleChange = (e) => {
-    setTodo({
-      ...todo,
-      [e.target.name]: e.target.value
-    });
-  };
-
-  const handleSubmit = async () => {
-    try {
-      const response = await axios.put(`/api/todo/${id}`, todo);
-      if (response.status === 200) {
-        toast.success("Todo Updated");
-
-        // Update the localStorage todos list
-        const todos = JSON.parse(localStorage.getItem("todos"));
-        const updatedTodos = todos.map(t => t._id === id ? response.data.todo : t);
-        localStorage.setItem("todos", JSON.stringify(updatedTodos));
-
-        router.push('/');
-      }
-    } catch (error) {
-      toast.error("Error updating Todo");
-    }
+  const handleSubmit = () => {
+    const todos = JSON.parse(localStorage.getItem("todos") || "[]");
+    const updatedTodos = todos.map(todo =>
+      todo._id === id ? { ...todo, title, desc } : todo
+    );
+    localStorage.setItem("todos", JSON.stringify(updatedTodos));
+    toast.success("Todo updated successfully!");
+    router.push('/');
   };
 
   return (
-    <div className="flex justify-center h-screen">
-      <div className="mt-8 flex gap-8 flex-col p-10 rounded-lg h-80 shadow-lg bg-black">
-        <h1 className="text-white font-bold text-2xl">Edit Todo</h1>
-        <label className="relative block">
-          <input
-            name="title"
-            className="placeholder:italic placeholder:text-slate-400 block bg-white w-full border border-slate-300 rounded-md py-2 pl-9 pr-3 shadow-sm focus:outline-none focus:border-sky-500 focus:ring-sky-500 focus:ring-1 sm:text-sm"
-            type="text"
-            value={todo.title || ""}
-            onChange={handleChange}
-          />
-        </label>
-        <label className="relative block">
-          <input
-            name="desc"
-            className="placeholder:italic placeholder:text-slate-400 block bg-white w-full border border-slate-300 rounded-md py-2 pl-9 pr-3 shadow-sm focus:outline-none focus:border-sky-500 focus:ring-sky-500 focus:ring-1 sm:text-sm"
-            type="text"
-            value={todo.desc || ""}
-            onChange={handleChange}
-          />
-        </label>
-
+    <div className="flex justify-center items-center mt-20">
+      <div className="w-96 bg-white p-8 rounded-lg shadow-lg">
+        <h2 className="text-2xl font-bold mb-4">Edit Todo</h2>
+        <input
+          type="text"
+          className="border p-2 w-full mb-4"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+        />
+        <textarea
+          className="border p-2 w-full mb-4"
+          value={desc}
+          onChange={(e) => setDesc(e.target.value)}
+        />
         <button
-          className="rounded-lg bg-green-500 px-4 py-2 text-white font-bold"
+          className="w-full bg-blue-500 text-white p-2 rounded-lg"
           onClick={handleSubmit}
         >
-          Update
+          Update Todo
         </button>
       </div>
     </div>
