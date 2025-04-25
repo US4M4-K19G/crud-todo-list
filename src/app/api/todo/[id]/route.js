@@ -23,3 +23,19 @@ export async function PUT(request: Request, { params }: { params: { id: string }
     return NextResponse.json({ error: "Failed to update todo" }, { status: 500 });
   }
 }
+export async function DELETE(request: Request, { params }: { params: { id: string } }) {
+  try {
+    const { id } = params;
+    const todos = JSON.parse(localStorage.getItem("todos") || "[]");
+
+    const updatedTodos = todos.filter(todo => todo._id !== id);
+
+    // Save the updated todos back to localStorage
+    localStorage.setItem("todos", JSON.stringify(updatedTodos));
+
+    return NextResponse.json({ message: "Todo deleted successfully" });
+  } catch (error) {
+    return NextResponse.json({ error: "Failed to delete todo" }, { status: 500 });
+  }
+}
+
