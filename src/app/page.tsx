@@ -27,15 +27,17 @@ export default function Page() {
 
   const router = useRouter();
 
-  // Fetch todos from API whenever `refresh` changes or on initial load
+  // Fetch todos from API or localStorage when page loads or refresh occurs
   useEffect(() => {
-    fetchTodosFromAPI();
+    const savedTodos = localStorage.getItem("todos");
+    if (savedTodos) {
+      setTodo(JSON.parse(savedTodos));
+    } else {
+      fetchTodosFromAPI();
+    }
   }, [refresh]);
 
-  useEffect(() => {
-    localStorage.setItem("todos", JSON.stringify(todo));
-  }, [todo]);
-
+  // Fetch todos from API
   const fetchTodosFromAPI = async () => {
     try {
       const response = await axios.get('/api/todo');
@@ -48,6 +50,11 @@ export default function Page() {
       toast.error("Failed to load todos");
     }
   };
+
+  // Update localStorage whenever the todos array changes
+  useEffect(() => {
+    localStorage.setItem("todos", JSON.stringify(todo));
+  }, [todo]);
 
   const handleDelete = (id: string) => {
     setTodoId(id);
@@ -68,13 +75,31 @@ export default function Page() {
         const response = await axios.delete(`/api/todo/${todoId}`);
         if (response.status === 200) {
           toast.success(response.data.message);
-          setTodo(prev => prev.filter(t => t._id !== todoId));
+          const updatedTodos = todo.filter(t => t._id !== todoId);
+          setTodo(updatedTodos);
+          localStorage.setItem("todos", JSON.stringify(updatedTodos));
           setShowModal(false);
-          setRefresh(prev => !prev);
+          setRefresh(prev => !prev);  // Trigger re-fetch
         }
       }
     } catch (error) {
       console.error("Error deleting todo:", error);
+    }
+  };
+
+  const toggleComplete = async (item: Todo) => {
+    try {
+      const updatedTodo = { ...item, completed: !item.completed };
+      const response = await axios.put(`/api/todo/${item._id}`, updatedTodo);
+      if (response.status === 200) {
+        toast.success("Task updated");
+        const updatedTodos = todo.map(t => (t._id === item._id ? updatedTodo : t));
+        setTodo(updatedTodos);
+        localStorage.setItem("todos", JSON.stringify(updatedTodos));
+      }
+    } catch (error) {
+      toast.error("Failed to update status");
+      console.error(error);
     }
   };
 
@@ -126,51 +151,26 @@ export default function Page() {
               <p className='text-center text-gray-500'>No {selectedTab} tasks found.</p>
             )}
 
-            {filteredTodos.map((item) => {
-              const toggleComplete = async () => {
-                try {
-                  const updatedTodo = {
-                    title: item.title,
-                    desc: item.desc,
-                    completed: !item.completed
-                  };
-
-                  const response = await axios.put(`/api/todo/${item._id}`, updatedTodo);
-                  if (response.status === 200) {
-                    toast.success("Task updated");
-                    setTodo(prev =>
-                      prev.map(t =>
-                        t._id === item._id ? { ...t, completed: !t.completed } : t
-                      )
-                    );
-                  }
-                } catch (error) {
-                  toast.error("Failed to update status");
-                  console.error(error);
-                }
-              };
-
-              return (
-                <div key={item._id} className='flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b-black-500 border-b-4 rounded-xl p-3 bg-white'>
-                  <div className='flex-1'>
-                    <h5 className={`font-bold text-lg ${item.completed ? 'line-through text-gray-500' : ''}`}>
-                      {item.title}
-                    </h5>
-                    <p className='text-sm text-gray-700'>{item.desc}</p>
-                  </div>
-                  <div className='flex items-center gap-3'>
-                    <input
-                      type="checkbox"
-                      checked={item.completed}
-                      onChange={toggleComplete}
-                      title="Mark as complete"
-                    />
-                    <MdDelete size={23} color='red' cursor='pointer' onClick={() => handleDelete(item._id)} />
-                    <FaEdit size={20} cursor='pointer' onClick={() => handleUpdate(item._id)} />
-                  </div>
+            {filteredTodos.map((item) => (
+              <div key={item._id} className='flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b-black-500 border-b-4 rounded-xl p-3 bg-white'>
+                <div className='flex-1'>
+                  <h5 className={`font-bold text-lg ${item.completed ? 'line-through text-gray-500' : ''}`}>
+                    {item.title}
+                  </h5>
+                  <p className='text-sm text-gray-700'>{item.desc}</p>
                 </div>
-              );
-            })}
+                <div className='flex items-center gap-3'>
+                  <input
+                    type="checkbox"
+                    checked={item.completed}
+                    onChange={() => toggleComplete(item)}
+                    title="Mark as complete"
+                  />
+                  <MdDelete size={23} color='red' cursor='pointer' onClick={() => handleDelete(item._id)} />
+                  <FaEdit size={20} cursor='pointer' onClick={() => handleUpdate(item._id)} />
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </div>
