@@ -64,7 +64,7 @@ export default function Page() {
         setShowModal(false);
         setRefresh(prev => !prev);
       }
-    } catch () {
+    } catch {
       toast.error("Failed to delete todo");
     }
   };
