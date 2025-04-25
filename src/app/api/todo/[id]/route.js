@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 
-export async function PUT(request: Request, { params }: { params: { id: string } }) {
+// PUT request to update a todo
+export async function PUT(request, { params }) {
   try {
     const { id } = params;
     const { title, desc, completed } = await request.json();
@@ -23,7 +24,9 @@ export async function PUT(request: Request, { params }: { params: { id: string }
     return NextResponse.json({ error: "Failed to update todo" }, { status: 500 });
   }
 }
-export async function DELETE(request: Request, { params }: { params: { id: string } }) {
+
+// DELETE request to delete a todo
+export async function DELETE(request, { params }) {
   try {
     const { id } = params;
     const todos = JSON.parse(localStorage.getItem("todos") || "[]");
@@ -38,4 +41,3 @@ export async function DELETE(request: Request, { params }: { params: { id: strin
     return NextResponse.json({ error: "Failed to delete todo" }, { status: 500 });
   }
 }
-
