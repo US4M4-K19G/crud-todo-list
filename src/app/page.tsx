@@ -40,7 +40,7 @@ export default function Page() {
     }
   };
 
-  const handleDelete = (id) => {
+  const handleDelete = (id: string) => {  // Explicitly define `id` as a string
     setTodoId(id);
     setShowModal(true);
   };
@@ -49,7 +49,7 @@ export default function Page() {
     router.push('/addpage');
   };
 
-  const handleUpdate = (id) => {
+  const handleUpdate = (id: string) => {  // Explicitly define `id` as a string
     router.push(`/edit/${id}`);
   };
 
