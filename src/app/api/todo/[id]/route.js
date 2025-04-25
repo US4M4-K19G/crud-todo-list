@@ -20,7 +20,7 @@ export async function PUT(request, { params }) {
     localStorage.setItem("todos", JSON.stringify(updatedTodos));
 
     return NextResponse.json({ message: "Todo updated successfully", todo: { _id: id, title, desc, completed } });
-  } catch () {
+  } catch {
     return NextResponse.json({ error: "Failed to update todo" }, { status: 500 });
   }
 }
@@ -37,7 +37,7 @@ export async function DELETE(request, { params }) {
     localStorage.setItem("todos", JSON.stringify(updatedTodos));
 
     return NextResponse.json({ message: "Todo deleted successfully" });
-  } catch () {
+  } catch {
     return NextResponse.json({ error: "Failed to delete todo" }, { status: 500 });
   }
 }
