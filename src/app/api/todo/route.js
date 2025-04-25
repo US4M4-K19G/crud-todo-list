@@ -27,7 +27,7 @@ export async function POST(request) {
     localStorage.setItem("todos", JSON.stringify(todos));
 
     return NextResponse.json({ message: "Todo created successfully", todo: newTodo }, { status: 200 });
-  } catch (error) {
+  } catch () {
     return NextResponse.json({ error: "Failed to create todo" }, { status: 500 });
   }
 }
@@ -42,7 +42,7 @@ export async function GET() {
     }
 
     return NextResponse.json({ todos }, { status: 200 });
-  } catch (error) {
+  } catch () {
     return NextResponse.json({ error: "Failed to fetch todos" }, { status: 500 });
   }
 }
