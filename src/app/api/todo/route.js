@@ -1,75 +1,40 @@
-import { NextResponse } from "next/server";
-import DBCon from "../../libs/db";
-import Todomodel from "../../../models/Todo";
+import { NextResponse } from 'next/server';
 
-export async function POST(request) {
-    try {
-        const { title, desc } = await request.json();
-        await DBCon();
-
-        if (!title || !desc) {
-            return NextResponse.json(
-                {
-                    success: true,
-                    message: "All fields are Required",
-                },
-                { status: 303 }
-            );
-        }
-
-        const createdTodo = await Todomodel.create({ title, desc });
-
-        return NextResponse.json(
-            {
-                success: true,
-                message: "TODO Created Successfully",
-                todo: createdTodo,
-            },
-            { status: 200 }
-        );
-    } catch (error) {
-        console.error("Error in POST /todo:", error);
-        return NextResponse.json(
-            {
-                success: false,
-                message: "Internal Server Error",
-            },
-            { status: 500 }
-        );
-    }
+// GET request to fetch all todos
+export async function GET() {
+  try {
+    const todos = JSON.parse(localStorage.getItem("todos") || "[]");
+    return NextResponse.json({ todo: todos });
+  } catch (error) {
+    return NextResponse.json({ error: "Failed to fetch todos" }, { status: 500 });
+  }
 }
 
-export async function GET() { 
-    try {
-        await DBCon();
+// POST request to create a new todo
+export async function POST(request: Request) {
+  try {
+    const { title, desc } = await request.json();
 
-        const Todo = await Todomodel.find();
-        if (!Todo || Todo.length === 0) {
-            return NextResponse.json(
-                {
-                    success: false,
-                    message: "No Data Found",
-                },
-                { status: 404 }
-            );
-        }
-
-        return NextResponse.json(
-            {
-                success: true,
-                message: "TODO Created Successfully",
-                todo: Todo,
-            },
-            { status: 200 }
-        );
-    } catch (error) {
-        console.error("Error in GET /todo:", error); 
-        return NextResponse.json(
-            {
-                success: false,
-                message: "Internal Server Error",
-            },
-            { status: 500 }
-        );
+    if (!title || !desc) {
+      return NextResponse.json({ error: "Title and description are required" }, { status: 400 });
     }
+
+    const newTodo = {
+      _id: Date.now().toString(),
+      title,
+      desc,
+      completed: false,
+    };
+
+    // Get current todos from localStorage
+    const currentTodos = JSON.parse(localStorage.getItem("todos") || "[]");
+
+    // Add new todo to the list
+    const updatedTodos = [...currentTodos, newTodo];
+    localStorage.setItem("todos", JSON.stringify(updatedTodos));
+
+    return NextResponse.json({ message: "Todo added successfully", todo: newTodo });
+  } catch (error) {
+    return NextResponse.json({ error: "Failed to add todo" }, { status: 500 });
+  }
 }
