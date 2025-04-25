@@ -7,6 +7,7 @@ import { FaEdit } from "react-icons/fa";
 import { useRouter } from 'next/navigation';
 import Modal from '../Components/Modal';
 import toast from 'react-hot-toast';
+import axios from 'axios';
 
 // Define the Todo interface
 interface Todo {
@@ -26,11 +27,20 @@ export default function Page() {
 
   const router = useRouter();
 
-  // Fetch todos from localStorage whenever `refresh` changes or on initial load
+  // Fetch todos from API whenever `refresh` changes or on initial load
   useEffect(() => {
-    const todos = JSON.parse(localStorage.getItem("todos") || "[]");
-    setTodo(todos);
+    fetchTodosFromAPI();
   }, [refresh]);
+
+  const fetchTodosFromAPI = async () => {
+    try {
+      const response = await axios.get('/api/todo');
+      setTodo(response.data.todo);
+    } catch (error) {
+      console.error("Error fetching todos:", error);
+      toast.error("Failed to load todos");
+    }
+  };
 
   const handleDelete = (id: string) => {
     setTodoId(id);
@@ -45,38 +55,18 @@ export default function Page() {
     router.push(`/edit/${id}`);
   };
 
-  const handleSubmit = () => {
-    // Delete todo logic
-    const currentTodos = JSON.parse(localStorage.getItem("todos") || "[]");
-    const updatedTodos = currentTodos.filter(todo => todo._id !== todoId);
-    localStorage.setItem("todos", JSON.stringify(updatedTodos));
-    setTodo(updatedTodos);
-    setShowModal(false);
-    toast.success("Todo deleted successfully!");
-  };
-
-  const handleSubmitNewTodo = (newTodo: Todo) => {
-    const currentTodos = JSON.parse(localStorage.getItem("todos") || "[]");
-    const updatedTodos = [...currentTodos, newTodo];
-    localStorage.setItem("todos", JSON.stringify(updatedTodos));
-    setTodo(updatedTodos);
-    toast.success("Todo added successfully!");
-  };
-
-  const toggleComplete = (item: Todo) => {
-    const updatedTodo = { ...item, completed: !item.completed };
-
-    // Get current todos from localStorage
-    const currentTodos = JSON.parse(localStorage.getItem("todos") || "[]");
-
-    // Update the todo in localStorage
-    const updatedTodos = currentTodos.map(todo =>
-      todo._id === item._id ? updatedTodo : todo
-    );
-    
-    localStorage.setItem("todos", JSON.stringify(updatedTodos));
-    setTodo(updatedTodos);
-    toast.success("Todo updated successfully!");
+  const handleSubmit = async () => {
+    try {
+      const response = await axios.delete(`/api/todo/${todoId}`);
+      if (response.status === 200) {
+        toast.success(response.data.message);
+        setTodo(prev => prev.filter(t => t._id !== todoId));
+        setShowModal(false);
+        setRefresh(prev => !prev);
+      }
+    } catch (error) {
+      toast.error("Failed to delete todo");
+    }
   };
 
   const filteredTodos = todo.filter(item =>
@@ -128,6 +118,29 @@ export default function Page() {
             )}
 
             {filteredTodos.map((item) => {
+              const toggleComplete = async () => {
+                try {
+                  const updatedTodo = {
+                    title: item.title,
+                    desc: item.desc,
+                    completed: !item.completed
+                  };
+
+                  const response = await axios.put(`/api/todo/${item._id}`, updatedTodo);
+                  if (response.status === 200) {
+                    toast.success("Task updated");
+                    setTodo(prev =>
+                      prev.map(t =>
+                        t._id === item._id ? { ...t, completed: !t.completed } : t
+                      )
+                    );
+                  }
+                } catch (error) {
+                  toast.error("Failed to update status");
+                  console.error(error);
+                }
+              };
+
               return (
                 <div key={item._id} className='flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b-black-500 border-b-4 rounded-xl p-3 bg-white'>
                   <div className='flex-1'>
@@ -140,7 +153,7 @@ export default function Page() {
                     <input
                       type="checkbox"
                       checked={item.completed}
-                      onChange={() => toggleComplete(item)}
+                      onChange={toggleComplete}
                       title="Mark as complete"
                     />
                     <MdDelete size={23} color='red' cursor='pointer' onClick={() => handleDelete(item._id)} />
