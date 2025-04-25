@@ -24,18 +24,26 @@ export default function Page() {
   const [todoId, setTodoId] = useState<string>('');
   const [refresh, setRefresh] = useState(false);
   const [selectedTab, setSelectedTab] = useState('incomplete');
+  const [isClient, setIsClient] = useState(false);
 
   const router = useRouter();
 
+  // Check if we are running in the browser, and set state accordingly
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
   // Fetch todos from API or localStorage when page loads or refresh occurs
   useEffect(() => {
-    const savedTodos = localStorage.getItem("todos");
-    if (savedTodos) {
-      setTodo(JSON.parse(savedTodos));
-    } else {
-      fetchTodosFromAPI();
+    if (isClient) {
+      const savedTodos = localStorage.getItem("todos");
+      if (savedTodos) {
+        setTodo(JSON.parse(savedTodos));
+      } else {
+        fetchTodosFromAPI();
+      }
     }
-  }, [refresh]);
+  }, [refresh, isClient]);
 
   // Fetch todos from API
   const fetchTodosFromAPI = async () => {
@@ -43,7 +51,9 @@ export default function Page() {
       const response = await axios.get('/api/todo');
       if (response.status === 200) {
         setTodo(response.data.todo);
-        localStorage.setItem("todos", JSON.stringify(response.data.todo));
+        if (isClient) {
+          localStorage.setItem("todos", JSON.stringify(response.data.todo));
+        }
       }
     } catch (error) {
       console.error("Error fetching todos:", error);
@@ -53,8 +63,10 @@ export default function Page() {
 
   // Update localStorage whenever the todos array changes
   useEffect(() => {
-    localStorage.setItem("todos", JSON.stringify(todo));
-  }, [todo]);
+    if (isClient) {
+      localStorage.setItem("todos", JSON.stringify(todo));
+    }
+  }, [todo, isClient]);
 
   const handleDelete = (id: string) => {
     setTodoId(id);
@@ -77,7 +89,9 @@ export default function Page() {
           toast.success(response.data.message);
           const updatedTodos = todo.filter(t => t._id !== todoId);
           setTodo(updatedTodos);
-          localStorage.setItem("todos", JSON.stringify(updatedTodos));
+          if (isClient) {
+            localStorage.setItem("todos", JSON.stringify(updatedTodos));
+          }
           setShowModal(false);
           setRefresh(prev => !prev);  // Trigger re-fetch
         }
@@ -95,7 +109,9 @@ export default function Page() {
         toast.success("Task updated");
         const updatedTodos = todo.map(t => (t._id === item._id ? updatedTodo : t));
         setTodo(updatedTodos);
-        localStorage.setItem("todos", JSON.stringify(updatedTodos));
+        if (isClient) {
+          localStorage.setItem("todos", JSON.stringify(updatedTodos));
+        }
       }
     } catch (error) {
       toast.error("Failed to update status");
