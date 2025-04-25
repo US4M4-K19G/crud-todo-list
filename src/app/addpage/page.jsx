@@ -1,73 +1,63 @@
-'use client'
-import React, { useState } from "react";
-import axios from 'axios';
+"use client";
+
+import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 
-export default function page() {
-  const [value, setValue] = useState({
-    title: "",
-    desc: ""
-  });
-  const { push } = useRouter();
+export default function AddPage() {
+  const [title, setTitle] = useState('');
+  const [desc, setDesc] = useState('');
+  const router = useRouter();
 
-  const handelOnChange = (e) => {
-    setValue({
-      ...value,
-      [e.target.name]: e.target.value
-    });
-  };
-
-  const handelSubmit = async () => {
-    try {
-      const request = await axios.post('/api/todo', value);
-      const respons = request.data;
-      if (request.status === 200) {
-        toast.success(respons.message);
-
-        // Update localStorage with the new todo
-        const currentTodos = JSON.parse(localStorage.getItem("todos")) || [];
-        localStorage.setItem("todos", JSON.stringify([...currentTodos, respons.todo]));
-
-        push('/');
-      }
-    } catch (error) {
-      console.log(error);
+  const handleSubmit = () => {
+    if (!title || !desc) {
+      toast.error("Please fill in both fields.");
+      return;
     }
+
+    const newTodo = {
+      _id: Date.now().toString(),
+      title,
+      desc,
+      completed: false
+    };
+
+    // Get current todos from localStorage
+    const currentTodos = JSON.parse(localStorage.getItem("todos") || "[]");
+
+    // Add new todo to the list
+    const updatedTodos = [...currentTodos, newTodo];
+    localStorage.setItem("todos", JSON.stringify(updatedTodos));
+
+    // Redirect back to the main page
+    toast.success("Todo added successfully!");
+    router.push('/');
   };
 
   return (
-    <>
-      <div className='flex justify-center  h-screen'>
-        <div className='mt-8 flex gap-8 flex-col p-10 rounded-lg h-80 shadow-lg bg-black'>
-          <h1 className='text-white font-bold text-2xl'>Add new Todo</h1>
-          <label className="relative block">
-            <input
-              onChange={handelOnChange}
-              className="placeholder:italic placeholder:text-slate-400 block bg-white w-full border border-slate-300 rounded-md py-2 pl-9 pr-3 shadow-sm focus:outline-none focus:border-sky-500 focus:ring-sky-500 focus:ring-1 sm:text-sm"
-              placeholder="Enter your title"
-              type="text"
-              name='title'
-            />
-          </label>
-          <label className="relative block">
-            <input
-              name='desc'
-              onChange={handelOnChange}
-              className="placeholder:italic placeholder:text-slate-400 block bg-white w-full border border-slate-300 rounded-md py-2 pl-9 pr-3 shadow-sm focus:outline-none focus:border-sky-500 focus:ring-sky-500 focus:ring-1 sm:text-sm"
-              placeholder="Enter your description"
-              type="text"
-            />
-          </label>
-
-          <button
-            className='rounded-lg bg-green-500 px-4 py-2 text-white font-bold'
-            onClick={handelSubmit}
-          >
-            Submit
-          </button>
-        </div>
+    <div className="flex justify-center items-center mt-20">
+      <div className="w-96 bg-white p-8 rounded-lg shadow-lg">
+        <h2 className="text-2xl font-bold mb-4">Add New Todo</h2>
+        <input
+          type="text"
+          className="border p-2 w-full mb-4"
+          placeholder="Title"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+        />
+        <textarea
+          className="border p-2 w-full mb-4"
+          placeholder="Description"
+          value={desc}
+          onChange={(e) => setDesc(e.target.value)}
+        />
+        <button
+          className="w-full bg-blue-500 text-white p-2 rounded-lg"
+          onClick={handleSubmit}
+        >
+          Add Todo
+        </button>
       </div>
-    </>
+    </div>
   );
 }
