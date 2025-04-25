@@ -5,7 +5,7 @@ import { FaPlus } from "react-icons/fa";
 import { MdDelete } from "react-icons/md";
 import { FaEdit } from "react-icons/fa";
 import { useRouter } from 'next/navigation';
-import Modal from '../components/Modal';
+import Modal from '../components/Modal.jsx';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 
