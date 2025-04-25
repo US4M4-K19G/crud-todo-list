@@ -13,14 +13,15 @@ export default function Page() {
   const [todo, setTodo] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [todoId, setTodoId] = useState('');
-  const [refresh, setRefresh] = useState(false);
+  const [refresh, setRefresh] = useState(false);  // Used for triggering refetch
   const [selectedTab, setSelectedTab] = useState('incomplete');
 
   const router = useRouter();
 
+  // Fetch todos from API whenever `refresh` changes or on initial load
   useEffect(() => {
     fetchTodosFromAPI();
-  }, []);
+  }, [refresh]); // This will trigger a refetch every time `refresh` changes
 
   useEffect(() => {
     localStorage.setItem("todos", JSON.stringify(todo));
@@ -60,7 +61,7 @@ export default function Page() {
           toast.success(response.data.message);
           setTodo(prev => prev.filter(t => t._id !== todoId));
           setShowModal(false);
-          setRefresh(true);
+          setRefresh(prev => !prev); // Toggle the `refresh` state to trigger refetch
         }
       }
     } catch (error) {
