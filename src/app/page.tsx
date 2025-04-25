@@ -9,11 +9,20 @@ import Modal from '../Components/Modal';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 
+// Define the Todo interface
+interface Todo {
+  _id: string;
+  title: string;
+  desc: string;
+  completed: boolean;
+}
+
 export default function Page() {
-  const [todo, setTodo] = useState([]);
+  // Use the Todo interface to type the state
+  const [todo, setTodo] = useState<Todo[]>([]);
   const [showModal, setShowModal] = useState(false);
-  const [todoId, setTodoId] = useState('');
-  const [refresh, setRefresh] = useState(false);  // Used for triggering refetch
+  const [todoId, setTodoId] = useState<string>('');
+  const [refresh, setRefresh] = useState(false);
   const [selectedTab, setSelectedTab] = useState('incomplete');
 
   const router = useRouter();
@@ -21,7 +30,7 @@ export default function Page() {
   // Fetch todos from API whenever `refresh` changes or on initial load
   useEffect(() => {
     fetchTodosFromAPI();
-  }, [refresh]); // This will trigger a refetch every time `refresh` changes
+  }, [refresh]);
 
   useEffect(() => {
     localStorage.setItem("todos", JSON.stringify(todo));
@@ -40,7 +49,7 @@ export default function Page() {
     }
   };
 
-  const handleDelete = (id: string) => {  // Explicitly define `id` as a string
+  const handleDelete = (id: string) => {
     setTodoId(id);
     setShowModal(true);
   };
@@ -49,7 +58,7 @@ export default function Page() {
     router.push('/addpage');
   };
 
-  const handleUpdate = (id: string) => {  // Explicitly define `id` as a string
+  const handleUpdate = (id: string) => {
     router.push(`/edit/${id}`);
   };
 
@@ -61,7 +70,7 @@ export default function Page() {
           toast.success(response.data.message);
           setTodo(prev => prev.filter(t => t._id !== todoId));
           setShowModal(false);
-          setRefresh(prev => !prev); // Toggle the `refresh` state to trigger refetch
+          setRefresh(prev => !prev);
         }
       }
     } catch (error) {
