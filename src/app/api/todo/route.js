@@ -12,11 +12,9 @@ export async function POST(request) {
                 {
                     success: true,
                     message: "All fields are Required",
-                    todo: createdTodo,
                 },
                 { status: 303 }
             );
-            
         }
 
         const createdTodo = await Todomodel.create({ title, desc });
@@ -30,7 +28,7 @@ export async function POST(request) {
             { status: 200 }
         );
     } catch (error) {
-        console.error("Error in POST /todo:", error); 
+        console.error("Error in POST /todo:", error);
         return NextResponse.json(
             {
                 success: false,
@@ -41,12 +39,12 @@ export async function POST(request) {
     }
 }
 
-export async function GET(request) {
+export async function GET() { 
     try {
         await DBCon();
 
-        const Todo = await Todomodel.find()
-        if(!Todo){
+        const Todo = await Todomodel.find();
+        if (!Todo || Todo.length === 0) {
             return NextResponse.json(
                 {
                     success: false,
@@ -65,7 +63,7 @@ export async function GET(request) {
             { status: 200 }
         );
     } catch (error) {
-        console.error("Error in POST /todo:", error); 
+        console.error("Error in GET /todo:", error); 
         return NextResponse.json(
             {
                 success: false,
